@@ -28,6 +28,7 @@ datasets_map = {
     'flowers': flowers,
     'imagenet': imagenet,
     'mnist': mnist,
+    'wbc': wbc,
 }
 
 
