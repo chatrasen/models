@@ -243,6 +243,17 @@ def resnet_v1(inputs,
           # Global average pooling.
           net = tf.reduce_mean(net, [1, 2], name='pool5', keep_dims=True)
           end_points['global_pool'] = net
+          net = slim.flatten(net)
+          end_points['My_Flatten'] = net
+          net = slim.fully_connected(net, 512, scope='My_fc3')
+          end_points['My_fc3'] = net
+          net = slim.dropout(net, 0.5, is_training=is_training,
+                             scope='dropout3')
+          net = slim.fully_connected(net, 256, scope='My_fc4')
+          end_points['My_fc4'] = net
+          net = slim.fully_connected(net, 128, scope='My_fc5')
+          end_points['My_fc5'] = net
+          print("****\n\n\n\n NEW LAYERS ADDED")
         if num_classes:
           net = slim.conv2d(net, num_classes, [1, 1], activation_fn=None,
                             normalizer_fn=None, scope='logits')

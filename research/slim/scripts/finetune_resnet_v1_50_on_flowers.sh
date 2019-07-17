@@ -31,7 +31,7 @@ PRETRAINED_CHECKPOINT_DIR=/tmp/checkpoints
 TRAIN_DIR=/tmp/flowers-models/resnet_v1_50
 
 # Where the dataset is saved to.
-DATASET_DIR=/tmp/flowers
+DATASET_DIR=/tmp/data/wbc
 
 # Download the pre-trained checkpoint.
 if [ ! -d "$PRETRAINED_CHECKPOINT_DIR" ]; then
@@ -40,19 +40,19 @@ fi
 if [ ! -f ${PRETRAINED_CHECKPOINT_DIR}/resnet_v1_50.ckpt ]; then
   wget http://download.tensorflow.org/models/resnet_v1_50_2016_08_28.tar.gz
   tar -xvf resnet_v1_50_2016_08_28.tar.gz
-  mv resnet_v1_50.ckpt ${PRETRAINED_CHECKPOINT_DIR}/resnet_v1_50.ckpt
+  mv resnet_v1_50_2016_08_28.tar.gz ${PRETRAINED_CHECKPOINT_DIR}/resnet_v1_50.ckpt
   rm resnet_v1_50_2016_08_28.tar.gz
 fi
 
 # Download the dataset
-python download_and_convert_data.py \
-  --dataset_name=flowers \
-  --dataset_dir=${DATASET_DIR}
+#python download_and_convert_data.py \
+#  --dataset_name=flowers \
+#  --dataset_dir=${DATASET_DIR}
 
 # Fine-tune only the new layers for 3000 steps.
 python train_image_classifier.py \
   --train_dir=${TRAIN_DIR} \
-  --dataset_name=flowers \
+  --dataset_name=wbc \
   --dataset_split_name=train \
   --dataset_dir=${DATASET_DIR} \
   --model_name=resnet_v1_50 \
@@ -72,7 +72,7 @@ python train_image_classifier.py \
 python eval_image_classifier.py \
   --checkpoint_path=${TRAIN_DIR} \
   --eval_dir=${TRAIN_DIR} \
-  --dataset_name=flowers \
+  --dataset_name=wbc \
   --dataset_split_name=validation \
   --dataset_dir=${DATASET_DIR} \
   --model_name=resnet_v1_50
@@ -80,7 +80,7 @@ python eval_image_classifier.py \
 # Fine-tune all the new layers for 1000 steps.
 python train_image_classifier.py \
   --train_dir=${TRAIN_DIR}/all \
-  --dataset_name=flowers \
+  --dataset_name=wbc \
   --dataset_split_name=train \
   --dataset_dir=${DATASET_DIR} \
   --checkpoint_path=${TRAIN_DIR} \
@@ -98,7 +98,7 @@ python train_image_classifier.py \
 python eval_image_classifier.py \
   --checkpoint_path=${TRAIN_DIR}/all \
   --eval_dir=${TRAIN_DIR}/all \
-  --dataset_name=flowers \
+  --dataset_name=wbc \
   --dataset_split_name=validation \
   --dataset_dir=${DATASET_DIR} \
   --model_name=resnet_v1_50
