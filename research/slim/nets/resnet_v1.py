@@ -243,8 +243,8 @@ def resnet_v1(inputs,
           # Global average pooling.
           net = tf.reduce_mean(net, [1, 2], name='pool5', keep_dims=True)
           end_points['global_pool'] = net
-          net = slim.flatten(net)
-          end_points['My_Flatten'] = net
+          # net = slim.flatten(net)
+          # end_points['My_Flatten'] = net
           net = slim.fully_connected(net, 512, scope='My_fc3')
           end_points['My_fc3'] = net
           net = slim.dropout(net, 0.5, is_training=is_training,
