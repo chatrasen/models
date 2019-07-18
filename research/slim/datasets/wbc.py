@@ -31,13 +31,13 @@ slim = tf.contrib.slim
 
 _FILE_PATTERN = 'wbc_%s_*.tfrecord'
 
-SPLITS_TO_SIZES = {'train': 1993, 'validation': 300}
+SPLITS_TO_SIZES = {'train': 475, 'validation': 106}
 
-_NUM_CLASSES = 7
+_NUM_CLASSES = 3
 
 _ITEMS_TO_DESCRIPTIONS = {
     'image': 'A color image of varying size.',
-    'label': 'A single integer between 0 and 7',
+    'label': 'A single integer between 0 and 3',
 }
 
 
