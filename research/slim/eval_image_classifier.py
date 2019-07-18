@@ -112,7 +112,7 @@ def main(_):
         shuffle=False,
         common_queue_capacity=2 * FLAGS.batch_size,
         common_queue_min=FLAGS.batch_size)
-    [image, label] = provider.get(['image', 'label'])
+    [image, label, filename] = provider.get(['image', 'label', 'filename'])
     label -= FLAGS.labels_offset
 
     #####################################
@@ -127,8 +127,8 @@ def main(_):
 
     image = image_preprocessing_fn(image, eval_image_size, eval_image_size)
 
-    images, labels = tf.train.batch(
-        [image, label],
+    images, labels, filenames = tf.train.batch(
+        [image, label, filename],
         batch_size=FLAGS.batch_size,
         num_threads=FLAGS.num_preprocessing_threads,
         capacity=5 * FLAGS.batch_size)
@@ -150,11 +150,17 @@ def main(_):
     predictions = tf.argmax(logits, 1)
     labels = tf.squeeze(labels)
 
+    mislabeled = tf.not_equal(predictions, labels)
+    mislabeled_filenames = tf.boolean_mask(filenames, mislabeled)
+
     # Define the metrics:
     names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
         'Accuracy': slim.metrics.streaming_accuracy(predictions, labels),
         'Recall_5': slim.metrics.streaming_recall_at_k(
             logits, labels, 5),
+        'Per_class_accuracy': tf.metrics.mean_per_class_accuracy(predictions, labels,
+                                                                 dataset.num_classes),
+        'mislabelled_filenames': mislabeled_filenames,
     })
 
     # Print the summaries to screen.
