@@ -82,13 +82,13 @@ tf.app.flags.DEFINE_float(
 tf.app.flags.DEFINE_integer(
     'eval_image_size', None, 'Eval image size')
 
+tf.app.flags.DEFINE_integer(
+        'num_classes', 3,'num classes')
 FLAGS = tf.app.flags.FLAGS
 
 
 def main(_):
-  if not FLAGS.dataset_dir:
-    raise ValueError('You must supply the dataset directory with --dataset_dir')
-
+ 
   tf.logging.set_verbosity(tf.logging.INFO)
   with tf.Graph().as_default():
     tf_global_step = slim.get_or_create_global_step()
@@ -104,7 +104,7 @@ def main(_):
     ####################
     network_fn = nets_factory.get_network_fn(
         FLAGS.model_name,
-        num_classes=(dataset.num_classes - FLAGS.labels_offset),
+        num_classes=(FLAGS.num_classes - FLAGS.labels_offset),
         is_training=False)
 
     ##############################################################
@@ -128,9 +128,11 @@ def main(_):
 
     eval_image_size = FLAGS.eval_image_size or network_fn.default_image_size
 
-    image = tf.placeholder(dtype=tf.float32, shape=(1,eval_image_size,eval_image_size,3))
+    image = tf.placeholder(dtype=tf.float32, shape=(eval_image_size,eval_image_size,3))
 
     image = image_preprocessing_fn(image, eval_image_size, eval_image_size)
+    
+    image = tf.placeholder(dtype=tf.float32, shape=(1,eval_image_size,eval_image_size,3))
 
     # images, labels, filenames = tf.train.batch(
     #     [image, label, filename],
@@ -191,22 +193,62 @@ def main(_):
     tf.logging.info('Evaluating %s' % checkpoint_path)
 
 
-    sess = tf.Session()
+    with tf.Session() as sess:
 
-    saver = tf.train.Saver()
-    saver.restore(sess, checkpoint_path, variables_to_restore=variables_to_restore)
+        saver = tf.train.Saver()
+        saver.restore(sess, checkpoint_path)
 
-    sample_images = ["/home/soumyadeep_morphle_in/tmp/data/wbc_morphle/wbc_images/lymphocytes"]
+        sample_images = ["/home/soumyadeep_morphle_in/tmp/data/wbc_morphle/wbc_images/neutrophils/x0y11_0.jpg"]
 
-    for image in sample_images:
-      im = Image.open(image).resize((299,299))
-      im = np.array(im)
-      im = im.reshape(-1,299,299,3)
-      predict_values, logit_values = sess.run([end_points['Predictions'], logits], feed_dict={image: im})
-      print (np.max(predict_values), np.max(logit_values))
-      print (np.argmax(predict_values), np.argmax(logit_values))
+        from os import listdir
+        from os.path import isfile, join
+        import os
+        in_dir = "/home/soumyadeep_morphle_in/tmp/data/wbc_morphle/wbc_images/monocytes"
+        sample_images = [os.path.join(in_dir,f) for f in listdir(in_dir) if isfile(join(in_dir, f))]
+        
+        #with tf.Session() as sess:
+        for img in sample_images:
+            im = Image.open(img).resize((eval_image_size,eval_image_size))
+            im = np.array(im)
+            im = im.reshape(1,eval_image_size,eval_image_size,3)
+      
+            end_points_values, logit_values, prediction_values = sess.run([end_points, logits, predictions], feed_dict={image: im})
+#      print (np.max(predict_values), np.max(logit_values))
+#      print (np.argmax(predict_values), np.argmax(logit_values))
 
-    # eval_op = list(names_to_updates.values())
+      #print(logits)
+            print(end_points_values)
+            exit()
+            ####################	
+            # Select the model #
+            ###################
+#            network_fn = nets_factory.get_network_fn(
+#                FLAGS.model_name,
+#                num_classes=(FLAGS.num_classes - FLAGS.labels_offset),
+#                is_training=False)
+#
+#
+#            #####################################
+#            # Select the preprocessing function #
+#            #####################################
+#            preprocessing_name = FLAGS.preprocessing_name or FLAGS.model_name
+#            image_preprocessing_fn = preprocessing_factory.get_preprocessing(
+#                preprocessing_name,
+#                is_training=False)
+#
+#            eval_image_size = FLAGS.eval_image_size or network_fn.default_image_size
+#
+#	    image = tf.placeholder(dtype=tf.float32, shape=(eval_image_size,eval_image_size,3))
+#
+#            image = image_preprocessing_fn(image, eval_image_size, eval_image_size)
+#    
+#            image = tf.placeholder(dtype=tf.float32, shape=(1,eval_image_size,eval_image_size,3))
+#
+#            ####################
+#            # Define the model #
+#            ####################
+#            logits, end_points = network_fn(image)
+#    # eval_op = list(names_to_updates.values())
     #
     # slim.evaluation.evaluate_once(
     #     master=FLAGS.master,
@@ -219,7 +261,7 @@ def main(_):
 
 if __name__ == '__main__':
   tf.app.run()
-
+  #main(1)
 
 
 # checkpoint_file = 'inception_resnet_v2_2016_08_30.ckpt'

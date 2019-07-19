@@ -26,13 +26,13 @@ set -e
 
 
 # Where the pre-trained Inception Resnet V2 checkpoint is saved to.
-PRETRAINED_CHECKPOINT_DIR=/tmp/checkpoints
+PRETRAINED_CHECKPOINT_DIR=~/tmp/checkpoints
 
 # Where the pre-trained Inception Resnet V2 checkpoint is saved to.
-MODEL_NAME=inception_resnet_v2
+MODEL_NAME=resnet_v1_50
 
 # Where the training (fine-tuned) checkpoint and logs will be saved to.
-TRAIN_DIR=/tmp/wbc-models/${MODEL_NAME}
+TRAIN_DIR=~/tmp/wbc_morphle-models/${MODEL_NAME}
 
 # Where the dataset is saved to.
 #DATASET_DIR=/tmp/wbc
@@ -104,4 +104,6 @@ TRAIN_DIR=/tmp/wbc-models/${MODEL_NAME}
 python image_classifier.py \
   --checkpoint_path=${TRAIN_DIR}/all \
   --eval_dir=${TRAIN_DIR}/all \
-  --model_name=${MODEL_NAME}
+  --model_name=${MODEL_NAME} \
+  --num_classes=3
+
