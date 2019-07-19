@@ -93,12 +93,6 @@ def main(_):
   with tf.Graph().as_default():
     tf_global_step = slim.get_or_create_global_step()
 
-    # ######################
-    # # Select the dataset #
-    # ######################
-    # dataset = dataset_factory.get_dataset(
-    #     FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
-
     ####################
     # Select the model #
     ####################
@@ -106,17 +100,6 @@ def main(_):
         FLAGS.model_name,
         num_classes=(FLAGS.num_classes - FLAGS.labels_offset),
         is_training=False)
-
-    ##############################################################
-    # Create a dataset provider that loads data from the dataset #
-    ##############################################################
-    # provider = slim.dataset_data_provider.DatasetDataProvider(
-    #     dataset,
-    #     shuffle=False,
-    #     common_queue_capacity=2 * FLAGS.batch_size,
-    #     common_queue_min=FLAGS.batch_size)
-    # [image, label, filename] = provider.get(['image', 'label', 'filename'])
-    # label -= FLAGS.labels_offset
 
     #####################################
     # Select the preprocessing function #
@@ -134,15 +117,6 @@ def main(_):
     
     image = tf.placeholder(dtype=tf.float32, shape=(1,eval_image_size,eval_image_size,3))
 
-    # images, labels, filenames = tf.train.batch(
-    #     [image, label, filename],
-    #     batch_size=FLAGS.batch_size,
-    #     num_threads=FLAGS.num_preprocessing_threads,
-    #     capacity=5 * FLAGS.batch_size)
-
-    ####################
-    # Define the model #
-    ####################
     logits, end_points = network_fn(image)
 
     if FLAGS.moving_average_decay:
@@ -155,35 +129,6 @@ def main(_):
       variables_to_restore = slim.get_variables_to_restore()
 
     predictions = tf.argmax(logits, 1)
-    # labels = tf.squeeze(labels)
-
-    # mislabeled = tf.not_equal(predictions, labels)
-    # mislabeled_filenames = tf.boolean_mask(filenames, mislabeled)
-
-
-    # # Define the metrics:
-    # names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
-    #     'Accuracy': slim.metrics.streaming_accuracy(predictions, labels),
-    #     'Recall_5': slim.metrics.streaming_recall_at_k(
-    #         logits, labels, 5),
-    #     'Per_class_accuracy': tf.metrics.mean_per_class_accuracy(predictions, labels,
-    #                                                              dataset.num_classes),
-    # })
-
-    # # Print the summaries to screen.
-    # for name, value in names_to_values.items():
-    #   summary_name = 'eval/%s' % name
-    #   op = tf.summary.scalar(summary_name, value, collections=[])
-    #   op = tf.Print(op, [value], summary_name)
-    #   tf.add_to_collection(tf.GraphKeys.SUMMARIES, op)
-
-    #
-    # # TODO(sguada) use num_epochs=1
-    # if FLAGS.max_num_batches:
-    #   num_batches = FLAGS.max_num_batches
-    # else:
-    #   # This ensures that we make a single pass over all of the data.
-    #   num_batches = math.ceil(dataset.num_samples / float(FLAGS.batch_size))
 
     if tf.gfile.IsDirectory(FLAGS.checkpoint_path):
       checkpoint_path = tf.train.latest_checkpoint(FLAGS.checkpoint_path)
@@ -210,73 +155,13 @@ def main(_):
         for img in sample_images:
             im = Image.open(img).resize((eval_image_size,eval_image_size))
             im = np.array(im)
-            im = im.reshape(1,eval_image_size,eval_image_size,3)
+            im = im.reshape(1, eval_image_size, eval_image_size,3)
       
             end_points_values, logit_values, prediction_values = sess.run([end_points, logits, predictions], feed_dict={image: im})
-#      print (np.max(predict_values), np.max(logit_values))
-#      print (np.argmax(predict_values), np.argmax(logit_values))
+            print(prediction_values)
 
-      #print(logits)
-            print(end_points_values)
-            exit()
-            ####################	
-            # Select the model #
-            ###################
-#            network_fn = nets_factory.get_network_fn(
-#                FLAGS.model_name,
-#                num_classes=(FLAGS.num_classes - FLAGS.labels_offset),
-#                is_training=False)
-#
-#
-#            #####################################
-#            # Select the preprocessing function #
-#            #####################################
-#            preprocessing_name = FLAGS.preprocessing_name or FLAGS.model_name
-#            image_preprocessing_fn = preprocessing_factory.get_preprocessing(
-#                preprocessing_name,
-#                is_training=False)
-#
-#            eval_image_size = FLAGS.eval_image_size or network_fn.default_image_size
-#
-#	    image = tf.placeholder(dtype=tf.float32, shape=(eval_image_size,eval_image_size,3))
-#
-#            image = image_preprocessing_fn(image, eval_image_size, eval_image_size)
-#    
-#            image = tf.placeholder(dtype=tf.float32, shape=(1,eval_image_size,eval_image_size,3))
-#
-#            ####################
-#            # Define the model #
-#            ####################
-#            logits, end_points = network_fn(image)
-#    # eval_op = list(names_to_updates.values())
-    #
-    # slim.evaluation.evaluate_once(
-    #     master=FLAGS.master,
-    #     checkpoint_path=checkpoint_path,
-    #     logdir=FLAGS.eval_dir,
-    #     num_evals=num_batches,
-    #     eval_op=list(names_to_updates.values()),
-    #     variables_to_restore=variables_to_restore)
 
 
 if __name__ == '__main__':
   tf.app.run()
-  #main(1)
 
-
-# checkpoint_file = 'inception_resnet_v2_2016_08_30.ckpt'
-# sample_images = ['dog.jpg', 'panda.jpg']
-# #Load the model
-# sess = tf.Session()
-# arg_scope = inception_resnet_v2_arg_scope()
-# with slim.arg_scope(arg_scope):
-#   logits, end_points = inception_resnet_v2(input_tensor, is_training=False)
-# saver = tf.train.Saver()
-# saver.restore(sess, checkpoint_file)
-# for image in sample_images:
-#   im = Image.open(image).resize((299,299))
-#   im = np.array(im)
-#   im = im.reshape(-1,299,299,3)
-#   predict_values, logit_values = sess.run([end_points['Predictions'], logits], feed_dict={input_tensor: im})
-#   print (np.max(predict_values), np.max(logit_values))
-#   print (np.argmax(predict_values), np.argmax(logit_values))
